@@ -1,89 +1,69 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
-import Svg, { Path, Rect } from 'react-native-svg';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
+import colors from '../constants/colors';
 
 interface Props {
   volumeData: number[];
-  isRecording?: boolean;
-  isPlaying?: boolean;
+  isActive: boolean;
 }
 
-const LiveWaveform: React.FC<Props> = ({ volumeData }) => {
-  const width = 300;
+const LiveWaveform: React.FC<Props> = ({ volumeData, isActive }) => {
+  const width = Math.min(Dimensions.get('window').width - 40, 340);
   const height = 48;
-  const step = width / 59;
+  const barCount = 32;
+  const barWidth = width / barCount;
   const animatedValue = useRef(new Animated.Value(0)).current;
+  const [barHeights, setBarHeights] = useState<number[]>(Array(barCount).fill(height / 2));
 
   useEffect(() => {
-    Animated.loop(
+    if (!isActive) return;
+    const animation = Animated.loop(
       Animated.timing(animatedValue, {
         toValue: 1,
-        duration: 1200,
+        duration: 1000,
         easing: Easing.linear,
         useNativeDriver: false,
       })
-    ).start();
-  }, [animatedValue]);
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [animatedValue, isActive]);
 
-  // Multi-wave fallback animation
-  const getWave = () => {
-    const points = [];
-    const t = animatedValue.__getValue ? animatedValue.__getValue() : 0;
-    for (let i = 0; i < 60; i++) {
-      const x = i * step;
-      let y;
-      if (volumeData && volumeData.length > 10 && volumeData.some(v => v > 1)) {
-        // Use real audio data
-        const v = volumeData[i] || 1;
-        y = height / 2 - (v * (height / 2 - 8)) / 10;
-      } else {
-        // Multi-wave fallback
-        const wave1 = Math.sin((i / 60) * 2 * Math.PI + t * 2 * Math.PI) * 10;
-        const wave2 = Math.sin((i / 60) * 4 * Math.PI + t * 4 * Math.PI) * 6;
-        const wave3 = Math.sin((i / 60) * 8 * Math.PI + t * 6 * Math.PI) * 3;
-        y = height / 2 + wave1 + wave2 + wave3;
-      }
-      points.push({ x, y });
-    }
-    // Top path
-    let path = `M${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      path += ` L${points[i].x} ${points[i].y}`;
-    }
-    // Bottom path (mirror)
-    for (let i = points.length - 1; i >= 0; i--) {
-      const x = points[i].x;
-      let y;
-      if (volumeData && volumeData.length > 10 && volumeData.some(v => v > 1)) {
-        const v = volumeData[i] || 1;
-        y = height / 2 + (v * (height / 2 - 8)) / 10;
-      } else {
-        const wave1 = Math.sin((i / 60) * 2 * Math.PI + t * 2 * Math.PI) * 10;
-        const wave2 = Math.sin((i / 60) * 4 * Math.PI + t * 4 * Math.PI) * 6;
-        const wave3 = Math.sin((i / 60) * 8 * Math.PI + t * 6 * Math.PI) * 3;
-        y = height / 2 - wave1 - wave2 - wave3;
-      }
-      path += ` L${x} ${y}`;
-    }
-    path += ' Z';
-    return path;
-  };
-
-  // Animated SVG path
-  const [animatedPath, setAnimatedPath] = React.useState('');
   useEffect(() => {
-    const id = animatedValue.addListener(() => {
-      setAnimatedPath(getWave());
+    if (!isActive) return;
+    const id = animatedValue.addListener(({ value }) => {
+      let newHeights: number[];
+      if (volumeData && volumeData.length > 10 && volumeData.some(v => v > 1)) {
+        newHeights = volumeData.slice(-barCount).map(v => Math.max(8, (v / 10) * height));
+        while (newHeights.length < barCount) newHeights.unshift(height / 2);
+      } else {
+        newHeights = Array(barCount).fill(0).map((_, i) => {
+          return (
+            height / 2 + Math.sin((i / barCount) * Math.PI * 2 + value * Math.PI * 2) * (height / 2 - 8)
+          );
+        });
+      }
+      setBarHeights(newHeights);
     });
     return () => animatedValue.removeListener(id);
-  });
+  }, [animatedValue, volumeData, isActive]);
 
   return (
-    <View style={styles.container}>
-      <Svg height={height} width={width} style={{ borderRadius: 24, overflow: 'hidden' }}>
-        <Rect x={0} y={0} width={width} height={height} rx={24} fill="#F3F6FA" />
-        <Path d={animatedPath} fill="#A0C4FF" opacity={0.9} />
-      </Svg>
+    <View style={[styles.container, { width, height }]}> 
+      {barHeights.map((barHeight, i) => (
+        <View
+          key={i}
+          style={[
+            styles.bar,
+            {
+              height: barHeight,
+              width: barWidth * 0.7,
+              marginLeft: i === 0 ? 0 : barWidth * 0.15,
+              marginRight: i === barCount - 1 ? 0 : barWidth * 0.15,
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 };
@@ -92,13 +72,16 @@ export default LiveWaveform;
 
 const styles = StyleSheet.create({
   container: {
-    height: 48,
-    width: 300,
-    marginBottom: 8,
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
     justifyContent: 'center',
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: 'transparent',
+    backgroundColor: colors.background,
+    marginBottom: 8,
+  },
+  bar: {
+    backgroundColor: colors.white,
+    borderRadius: 6,
   },
 });

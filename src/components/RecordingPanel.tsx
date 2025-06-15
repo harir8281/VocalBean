@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LiveWaveform from './LiveWaveform';
+import colors from '../constants/colors';
 
 interface Props {
   isRecording: boolean;
@@ -14,8 +13,6 @@ interface Props {
   isPlaying: boolean;
   onPlayPause: () => void;
 }
-
-const audioRecorderPlayer = new AudioRecorderPlayer();
 
 const RecordingPanel: React.FC<Props> = ({
   isRecording,
@@ -37,15 +34,17 @@ const RecordingPanel: React.FC<Props> = ({
   };
   return (
     <View style={styles.panel}>
-      <TouchableOpacity style={styles.waveformContainer} onPress={handleWaveformPress} activeOpacity={0.7}>
-        <LiveWaveform volumeData={volumeData} isPlaying={isPlaying} isRecording={isRecording} />
-        <View style={styles.timerOverlay}>
-          <Text style={styles.time}>{duration}</Text>
-          {!isRecording && (
-            <Text style={styles.playPauseIcon}>{isPlaying ? '⏸' : '▶'}</Text>
-          )}
-        </View>
-      </TouchableOpacity>
+      <View style={styles.waveformShadowBox}>
+        <TouchableOpacity style={styles.waveformContainer} onPress={handleWaveformPress} activeOpacity={0.7}>
+          <LiveWaveform volumeData={volumeData} isActive={isRecording && !isPaused} />
+          <View style={styles.timerOverlay}>
+            <Text style={styles.time}>{duration}</Text>
+            {!isRecording && (
+              <Text style={styles.playPauseIcon}>{isPlaying ? '⏸' : '▶'}</Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity onPress={onDone} style={styles.doneButton}>
         <Text style={styles.doneText}>✓ Done</Text>
       </TouchableOpacity>
@@ -61,22 +60,38 @@ const styles = StyleSheet.create({
     bottom: 40,
     left: 12,
     right: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     borderRadius: 24,
     padding: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+    shadowOpacity: 0.10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
     alignItems: 'center',
     zIndex: 20,
+  },
+  waveformShadowBox: {
+    width: 320,
+    alignSelf: 'center',
+    borderRadius: 24,
+    backgroundColor: colors.background,
+    shadowColor: '#000',
+    shadowOpacity: 0.13,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 12,
   },
   waveformContainer: {
     width: 300,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: colors.background,
+    marginBottom: 0,
   },
   timerOverlay: {
     position: 'absolute',
@@ -91,16 +106,16 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 20,
-    color: '#222',
+    color: colors.white,
     fontWeight: 'bold',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(24,26,32,0.7)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 4,
     overflow: 'hidden',
   },
   doneButton: {
-    backgroundColor: '#d1f5d3',
+    backgroundColor: '#1e2b2b',
     borderRadius: 18,
     paddingHorizontal: 32,
     paddingVertical: 16,
@@ -111,14 +126,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   doneText: {
-    color: 'green',
+    color: colors.primary,
     fontWeight: 'bold',
     fontSize: 20,
     textAlign: 'center',
   },
   playPauseIcon: {
     fontSize: 28,
-    color: '#007AFF',
+    color: colors.primary,
     marginLeft: 12,
   },
 });

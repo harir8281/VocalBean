@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import colors from '../constants/colors';
 
 export interface Recording {
   id: string;
@@ -16,6 +16,8 @@ export interface RecordingsListProps {
   onPlayPause?: (id: string) => void;
 }
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const RecordingsList: React.FC<RecordingsListProps> = ({ recordings, currentlyPlayingId, onPlayPause }) => {
   const renderItem = ({ item }: { item: Recording }) => (
     <View style={styles.itemContainer}>
@@ -27,22 +29,30 @@ const RecordingsList: React.FC<RecordingsListProps> = ({ recordings, currentlyPl
             style={styles.playButton}
             onPress={() => onPlayPause && onPlayPause(item.id)}
           >
-            <Text>{currentlyPlayingId === item.id ? '⏸' : '▶'} {item.duration}</Text>
+            <Text style={styles.playText}>{currentlyPlayingId === item.id ? '⏸' : '▶'} {item.duration}</Text>
           </TouchableOpacity>
         ) : (
           <View style={[styles.playButton, styles.disabledButton]}>
-            <Text style={{ color: '#bbb' }}>No Audio</Text>
+            <Text style={styles.noAudioText}>No Audio</Text>
           </View>
         )}
         <View style={styles.iconGroup}>
-          <Text>📋</Text>
-          <Text>↗️</Text>
-          <Text>📨</Text>
-          <Text>⋯</Text>
+          <Text style={styles.icon}>📋</Text>
+          <Text style={styles.icon}>↗️</Text>
+          <Text style={styles.icon}>📨</Text>
+          <Text style={styles.icon}>⋯</Text>
         </View>
       </View>
     </View>
   );
+
+  if (!recordings || recordings.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No recordings yet. Tap the mic to get started!</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -50,7 +60,7 @@ const RecordingsList: React.FC<RecordingsListProps> = ({ recordings, currentlyPl
         data={recordings}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
       />
     </SafeAreaView>
   );
@@ -62,22 +72,32 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   itemContainer: {
-    padding: 12,
+    padding: screenWidth * 0.025,
     borderBottomWidth: 1,
-    borderColor: '#ddd',
-    width: '100%',
+    borderColor: '#222',
+    width: '98%',
+    alignSelf: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.10,
+    shadowRadius: 2,
+    elevation: 1,
   },
   time: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: screenWidth * 0.025,
+    color: colors.white,
   },
   title: {
-    fontSize: 16,
+    fontSize: screenWidth * 0.032,
     fontWeight: '600',
-    marginVertical: 4,
+    marginVertical: 2,
+    color: colors.white,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -86,17 +106,43 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   playButton: {
-    backgroundColor: '#eee',
-    padding: 8,
+    backgroundColor: '#222',
+    padding: screenWidth * 0.012,
     borderRadius: 8,
-    minWidth: 70,
+    minWidth: 50,
     alignItems: 'center',
   },
+  playText: {
+    color: colors.white,
+    fontSize: screenWidth * 0.03,
+  },
+  noAudioText: {
+    color: '#555',
+    fontSize: screenWidth * 0.03,
+  },
   disabledButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#333',
   },
   iconGroup: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+  },
+  icon: {
+    color: colors.white,
+    fontSize: screenWidth * 0.032,
+    marginHorizontal: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    backgroundColor: colors.background,
+  },
+  emptyText: {
+    color: colors.white,
+    fontSize: screenWidth * 0.035,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });

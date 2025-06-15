@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 const useAudioRecorder = () => {
@@ -12,7 +12,7 @@ const useAudioRecorder = () => {
     setRecordedFile(null);
     recorderPlayer.addRecordBackListener((e) => {
       const volume = Math.abs(e.currentMetering || 0);
-      setVolumeData((prev) => [...prev.slice(-60), volume]);
+      setVolumeData((prev) => [...prev.slice(-32), volume]);
     });
     setIsRecording(true);
     return uri;

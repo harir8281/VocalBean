@@ -9,6 +9,7 @@ import RecordButton from '../components/RecordButton';
 import useAudioRecorder from '../hooks/useAudioRecorder';
 import useTimer from '../hooks/useTimer';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import colors from '../constants/colors';
 
 interface Recording {
   id: string;
@@ -31,8 +32,9 @@ const RecorderScreen: React.FC = () => {
   const [recordStart, setRecordStart] = React.useState<Date | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const audioPlayer = React.useRef(new AudioRecorderPlayer()).current;
-  const duration = useTimer(isRecording && !isPaused);
   const [currentlyPlayingId, setCurrentlyPlayingId] = React.useState<string | null>(null);
+  const [timerResetKey, setTimerResetKey] = React.useState(0);
+  const duration = useTimer(isRecording && !isPaused, timerResetKey);
 
   const handlePauseToggle = () => setIsPaused((prev) => !prev);
 
@@ -40,11 +42,13 @@ const RecorderScreen: React.FC = () => {
     await startRecording();
     setRecordStart(new Date());
     setIsPaused(false);
+    setTimerResetKey((prev) => prev + 1);
   };
 
   const handleDone = async () => {
     const fileUri = await stopRecording();
     setIsPaused(false);
+    setTimerResetKey((prev) => prev + 1);
     if (fileUri && recordStart) {
       const now = new Date();
       const mins = Math.floor((now.getTime() - recordStart.getTime()) / 60000);
@@ -62,12 +66,10 @@ const RecorderScreen: React.FC = () => {
     }
   };
 
-  // Play/pause for waveform (last recorded audio)
   const handlePlayPause = async () => {
     if (isRecording) return;
     const last = recordings[0];
     if (!last || !last.uri) return;
-    // Stop any currently playing audio
     if (currentlyPlayingId && currentlyPlayingId !== last.id) {
       await audioPlayer.stopPlayer();
       setCurrentlyPlayingId(null);
@@ -91,7 +93,6 @@ const RecorderScreen: React.FC = () => {
     }
   };
 
-  // Play/pause for a specific recording from the list
   const handleListPlayPause = async (id: string) => {
     const rec = recordings.find(r => r.id === id);
     if (!rec || !rec.uri) return;
@@ -123,7 +124,6 @@ const RecorderScreen: React.FC = () => {
         currentlyPlayingId={currentlyPlayingId || undefined}
         onPlayPause={handleListPlayPause}
       />
-      {/* Record Button always visible at bottom center */}
       <View style={styles.recordButtonContainer}>
         <RecordButton
           isRecording={isRecording}
@@ -131,7 +131,6 @@ const RecorderScreen: React.FC = () => {
           onStop={handleDone}
         />
       </View>
-      {/* Show RecordingPanel only when recording */}
       {isRecording && (
         <RecordingPanel
           isRecording={isRecording}
@@ -153,7 +152,7 @@ export default RecorderScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     padding: 12,
   },
   recordButtonContainer: {
