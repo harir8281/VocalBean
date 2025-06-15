@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 const TopBar = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>App name</Text>
+      <Text style={styles.title}>Vocal Bean</Text>
       <View style={styles.icons}>
         <TouchableOpacity><Text>➕</Text></TouchableOpacity>
         <TouchableOpacity><Text>📅</Text></TouchableOpacity>

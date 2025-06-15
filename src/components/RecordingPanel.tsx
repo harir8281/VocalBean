@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import LiveWaveform from './LiveWaveform';
 
 interface Props {
   isRecording: boolean;
   isPaused: boolean;
   duration: string;
+  volumeData: number[];
   onPauseToggle: () => void;
   onDone: () => void;
+  isPlaying: boolean;
+  onPlayPause: () => void;
 }
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -17,97 +21,34 @@ const RecordingPanel: React.FC<Props> = ({
   isRecording,
   isPaused,
   duration,
+  volumeData,
   onPauseToggle,
   onDone,
+  isPlaying,
+  onPlayPause,
 }) => {
-  const [volumeData, setVolumeData] = useState<number[]>(Array(50).fill(1)); // Initial flat waveform
-  const animatedValue = useState(new Animated.Value(0))[0]; // For waveform animation
-
-  // Start recording and listen to audio levels
-  useEffect(() => {
-    if (isRecording && !isPaused) {
-      const startRecording = async () => {
-        try {
-          await audioRecorderPlayer.startRecorder();
-          audioRecorderPlayer.addRecordBackListener((e) => {
-            const volume = Math.min(e.currentMetering || 0, 10); // Normalize volume (0-10)
-            setVolumeData((prev) => {
-              const newData = [...prev.slice(1), volume]; // Shift data for animation
-              return newData;
-            });
-          });
-        } catch (error) {
-          console.error('Recording failed:', error);
-        }
-      };
-      startRecording();
-    } else if (isPaused) {
-      audioRecorderPlayer.pauseRecorder();
-    }
-
-    return () => {
-      audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
-    };
-  }, [isRecording, isPaused]);
-
-  // Waveform animation loop
-  useEffect(() => {
-    if (isRecording && !isPaused) {
-      Animated.loop(
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ).start();
+  if (!isRecording && !isPlaying) return null;
+  const handleWaveformPress = () => {
+    if (isRecording) {
+      onPauseToggle();
     } else {
-      animatedValue.setValue(0);
+      onPlayPause();
     }
-  }, [isRecording, isPaused, animatedValue]);
-
-  if (!isRecording) return null;
-
-  // Generate SVG path for waveform
-  const generateWaveformPath = () => {
-    const width = 300;
-    const height = 40;
-    const step = width / (volumeData.length - 1);
-    let path = `M0 ${height / 2} `;
-    
-    volumeData.forEach((value, index) => {
-      const x = index * step;
-      const y = height / 2 - (value * (height / 2)) / 10; // Scale amplitude
-      path += `L${x} ${y} `;
-    });
-
-    path += `L${width} ${height / 2}`;
-    return path;
   };
-
   return (
     <View style={styles.panel}>
-      <Svg height="40" width="300" style={styles.waveform}>
-        <Path
-          d={generateWaveformPath()}
-          stroke="#007AFF"
-          strokeWidth="2"
-          fill="none"
-          translateX={animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -10], // Slight horizontal shift for animation
-          })}
-        />
-      </Svg>
-      <View style={styles.controls}>
-        <TouchableOpacity onPress={onPauseToggle}>
-          <Text style={styles.time}>{isPaused ? '▶' : '⏸'} {duration}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onDone} style={styles.doneButton}>
-          <Text style={styles.doneText}>✅ Done</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.waveformContainer} onPress={handleWaveformPress} activeOpacity={0.7}>
+        <LiveWaveform volumeData={volumeData} isPlaying={isPlaying} isRecording={isRecording} />
+        <View style={styles.timerOverlay}>
+          <Text style={styles.time}>{duration}</Text>
+          {!isRecording && (
+            <Text style={styles.playPauseIcon}>{isPlaying ? '⏸' : '▶'}</Text>
+          )}
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onDone} style={styles.doneButton}>
+        <Text style={styles.doneText}>✓ Done</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -117,39 +58,67 @@ export default RecordingPanel;
 const styles = StyleSheet.create({
   panel: {
     position: 'absolute',
-    bottom: 10,
+    bottom: 40,
     left: 12,
     right: 12,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 20,
-    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
     alignItems: 'center',
+    zIndex: 20,
   },
-  waveform: {
-    marginBottom: 8,
+  waveformContainer: {
+    width: 300,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  controls: {
+  timerOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
   },
   time: {
-    fontSize: 18,
-    color: '#000',
+    fontSize: 20,
+    color: '#222',
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    overflow: 'hidden',
   },
   doneButton: {
     backgroundColor: '#d1f5d3',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 18,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    marginTop: 8,
+    width: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
   doneText: {
     color: 'green',
     fontWeight: 'bold',
+    fontSize: 20,
+    textAlign: 'center',
+  },
+  playPauseIcon: {
+    fontSize: 28,
+    color: '#007AFF',
+    marginLeft: 12,
   },
 });
