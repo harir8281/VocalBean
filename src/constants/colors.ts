@@ -1,8 +1,9 @@
 const colors = {
-  background: '#0A0A0A',
-  primary: '#FF3B30',
-  waveform: '#61dafb',
+  background: '#181A20',
+  primary: '#00C6AE',
+  waveform: '#00C6AE',
   white: '#FFFFFF',
+  text: '#FFFFFF',
 };
 
 export default colors;

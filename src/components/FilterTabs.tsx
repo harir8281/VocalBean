@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
+import colors from '../constants/colors';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const FilterTabs = () => {
   return (
     <View style={styles.container}>
-      {['All', 'Shared', 'Starred'].map(label => (
-        <TouchableOpacity key={label} style={styles.tab}>
-          <Text>{label}</Text>
-        </TouchableOpacity>
-      ))}
+      <View style={styles.tabsRow}>
+        <TouchableOpacity style={styles.tab}><Text style={styles.tabText}>All</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.tab}><Text style={styles.tabText}>Shared</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.tab}><Text style={styles.tabText}>Starred</Text></TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -17,14 +20,29 @@ export default FilterTabs;
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 8,
+  },
+  tabsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: screenWidth * 0.012,
+    marginRight: screenWidth * 0.01,
   },
   tab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#eee',
+    backgroundColor: '#23242a',
+    borderRadius: 12,
+    paddingHorizontal: screenWidth * 0.025,
+    paddingVertical: screenWidth * 0.012,
+    marginLeft: 0,
+    minWidth: screenWidth * 0.14,
+    alignItems: 'center',
+  },
+  tabText: {
+    color: colors.white,
+    
+    fontSize: screenWidth * 0.030,
   },
 });

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, View, Animated } from 'react-native';
+import { Pressable, StyleSheet, View, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 type Props = {
   isRecording: boolean;
@@ -26,25 +28,26 @@ export default RecordButton;
 
 const styles = StyleSheet.create({
   button: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#FF3B30',
+    width: screenWidth * 0.18,
+    height: screenWidth * 0.18,
+    borderRadius: screenWidth * 0.09,
+    backgroundColor: '#b5b504',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#FF3B30',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   recording: {
-    backgroundColor: '#C70039',
+    backgroundColor: '#8f0000',
   },
   innerCircle: {
-    width: 30,
-    height: 30,
-    backgroundColor: '#fff',
+    width: screenWidth * 0.07,
+    height: screenWidth * 0.07,
+    backgroundColor: '#adadad',
     borderRadius: 6,
+    borderWidth: 1,
   },
 });
