@@ -1,4 +1,4 @@
-🎙️ Vocal Bean – React Native Voice Recorder with Live Waveform
+# 🎙️ Vocal Bean – React Native Voice Recorder with Live Waveform
 This app is a simple, elegant React Native audio recording application that allows users to:
 
 Start and stop voice recordings
