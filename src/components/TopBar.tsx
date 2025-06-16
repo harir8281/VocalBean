@@ -24,7 +24,7 @@ export default TopBar;
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: colors.background,
-    paddingTop: Platform.OS === 'android' ? 10 : 0, // Adjust for Android status bar
+    paddingTop: Platform.OS === 'android' ? 10 : 0, 
   },
   container: {
     flexDirection: 'row',
