@@ -10,6 +10,8 @@ Experience smooth, responsive audio interaction
 📱 Currently supports Android platform.
 
 📸 Screenshots
+![completed](https://github.com/user-attachments/assets/490c0cb5-8c30-49d5-90e1-faa3cd615f27)
+
 Recording Idle	Recording Active	Waveform Preview	Recording Stopped
 
 🚀 Features
